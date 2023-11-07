@@ -1,0 +1,619 @@
+<head>
+    <style>
+        img {
+            border-radius: 10px;
+        }
+
+        .tab {
+            display: inline-block;
+            margin-left: 40px;
+        }
+
+        p,
+        h1,
+        h2,
+        h3 {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .code {
+            font-family: "Lucida Console", "Courier New", monospace;
+            background-color: black;
+            color: green;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Lab Assignment #7: Ultrasonic Ranging, Matrix Keypad, Infrared Remote, and Hygrothermograph DHT11<br>
+        2023-11-06</h1>
+
+    <h2>Lab 24.2</h2>
+    <h3>Breadboard Settings</h3>
+    <img src="Lab24_2.jpg" width="1000" height="708">
+
+    <h3>Video</h3>
+    <video controls autoplay>
+        <source src="Lab24_2.mov" type="video/mp4">
+    </video>
+
+
+    <h2>Project #1</h2>
+
+    <h3>Description of what the lab assignment is about</h3>
+    <p>This lab assignment is about being able to properly use the combination of Thonny, ESP32, and components such
+        as<br>
+        a certain musical note will be played depending on the distance percieved and the appropriate LED will light up.
+    </p>
+
+    <h3>List of Hardware Compnents</h3>
+
+    <ul>
+        <li>7 x LED's (red))</li>
+        <li>18 x wires</li>
+        <li>7 x 220-ohm resistor</li>
+        <li>1 x Passive Buzzer</li>
+        <li>1 x NPN Transistor</li>
+        <li>1 x 1k-ohm resistor</li>
+        <li>1 x HC SR04</li>
+        <li>ESP 32</li>
+    </ul>
+    <h3>Circuit Diagram</h3>
+    <img src="Project_1_CircuitDiagram.jpg" width="708" height="400">
+
+    <h3>Breadboard Diagram</h3>
+    <img src="Project_1_BreadboardView.jpg" width="1400" height="531">
+
+    <h3>Breadboard Settings</h3>
+    <img src="Project_1.jpg" width="1000" height="708">
+
+    <h3>Video</h3>
+    <video controls autoplay>
+        <source src="Project_1.mov" type="video/mp4">
+    </video>
+
+    <h3>Source Code</h3>
+    <p class="code">
+        from machine import Pin, PWM<br>
+        import time<br>
+        <br>
+        led1=Pin(23,Pin.OUT) #create LED object from pin2,Set Pin2 to output<br>
+        led2=Pin(22,Pin.OUT)<br>
+        led3=Pin(21,Pin.OUT)<br>
+        led4=Pin(19,Pin.OUT)<br>
+        led5=Pin(18,Pin.OUT)<br>
+        led6=Pin(5,Pin.OUT)<br>
+        led7=Pin(4,Pin.OUT)<br>
+        <br>
+        trigPin=Pin(13,Pin.OUT,0)<br>
+        echoPin=Pin(14,Pin.IN,0)<br>
+        <br>
+        passiveBuzzer=PWM(Pin(12),2000)<br>
+        passiveBuzzer.deinit()<br>
+        <br>
+        soundVelocity=340<br>
+        distance=0<br>
+        <br>
+        C = 1047<br>
+        D = 1175<br>
+        E = 1319<br>
+        F = 1397<br>
+        G = 1568<br>
+        A = 1760<br>
+        B = 1976<br>
+        C7 = 2093<br>
+        <br>
+        previousNumber = None<br>
+        currentNumber = None<br>
+        firstPass = True<br>
+        <br>
+        notes = [C, D, E, F, G, A, B, C7]<br>
+        lights = [led1, led2, led3, led4, led5, led6, led7]<br>
+        <br>
+        def getSonar():<br>
+        <span class="tab"></span>trigPin.value(1)<br>
+        <span class="tab"></span>time.sleep_us(10)<br>
+        <span class="tab"></span>trigPin.value(0)<br>
+        <span class="tab"></span>while not echoPin.value():<br>
+        <span class="tab"></span><span class="tab"></span>pass<br>
+        <span class="tab"></span>pingStart=time.ticks_us()<br>
+        <span class="tab"></span>while echoPin.value():<br>
+        <span class="tab"></span><span class="tab"></span>pass<br>
+        <span class="tab"></span>pingStop=time.ticks_us()<br>
+        <span class="tab"></span>pingTime=time.ticks_diff(pingStop,pingStart)<br>
+        <span class="tab"></span>distance=pingTime*soundVelocity//2//10000<br>
+        <span class="tab"></span>return int(distance)<br>
+        <br>
+        def reverseGPIO(led):<br>
+        <span class="tab"></span>if led.value():<br>
+        <span class="tab"></span><span class="tab"></span>led.value(0)<br>
+        <span class="tab"></span>else:<br>
+        <span class="tab"></span><span class="tab"></span>led.value(1)<br>
+        <br>
+        def playNoteAndLight(number):<br>
+        <span class="tab"></span>if number != 7:<br>
+        <span class="tab"></span><span class="tab"></span>passiveBuzzer.freq(notes[number])<br>
+        <span class="tab"></span><span class="tab"></span>lights[number].value(1)<br>
+        <span class="tab"></span><span class="tab"></span>time.sleep_ms(500)<br>
+        <span class="tab"></span>else:<br>
+        <span class="tab"></span><span class="tab"></span>passiveBuzzer.freq(notes[number])<br>
+        <span class="tab"></span><span class="tab"></span>time.sleep_ms(500)<br>
+        <br>
+        for i in lights:<br>
+        <span class="tab"></span>i.value(1)<br>
+        <span class="tab"></span>time.sleep_ms(100)<br>
+        <span class="tab"></span>i.value(0)<br>
+        <span class="tab"></span>time.sleep_ms(100)<br>
+        <br>
+        time.sleep_ms(2000)<br>
+        try:<br>
+        <span class="tab"></span>while True:<br>
+        <span class="tab"></span><span class="tab"></span>distance = getSonar()<br>
+        <span class="tab"></span><span class="tab"></span>print('Distance: ',distance,'cm' )<br>
+        <br>
+        <span class="tab"></span><span class="tab"></span>if distance > 5 and distance <= 10:<br>
+            <span class="tab"></span><span class="tab"></span><span class="tab"></span>print("Level 7")<br>
+            <span class="tab"></span><span class="tab"></span><span class="tab"></span># set current<br>
+            <span class="tab"></span><span class="tab"></span><span class="tab"></span>currentNumber = 7<br>
+            <br>
+            <span class="tab"></span><span class="tab"></span><span class="tab"></span># ensure buzzer is
+            initialized<br>
+            <span class="tab"></span><span class="tab"></span><span class="tab"></span>if previousNumber == 10 or
+            firstPass:<br>
+            <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                class="tab"></span>passiveBuzzer.init()<br>
+            <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                class="tab"></span>firstPass = False<br>
+            <br>
+            <span class="tab"></span><span class="tab"></span><span class="tab"></span># ensure light of the previous is
+            off<br>
+            <span class="tab"></span><span class="tab"></span><span class="tab"></span>else:<br>
+            <span class="tab"></span><span class="tab"></span><span class="tab"></span><span class="tab"></span>if
+            currentNumber != previousNumber:<br>
+            <span class="tab"></span><span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                class="tab"></span>lights[previousNumber].value(0)<br>
+            <br>
+            <span class="tab"></span><span class="tab"></span><span class="tab"></span># action<br>
+            <span class="tab"></span><span class="tab"></span><span
+                class="tab"></span>playNoteAndLight(currentNumber)<br>
+            <br>
+            <span class="tab"></span><span class="tab"></span><span class="tab"></span># set previous<br>
+            <span class="tab"></span><span class="tab"></span><span class="tab"></span>previousNumber =
+            currentNumber<br>
+            <br>
+            <span class="tab"></span><span class="tab"></span>elif distance > 10 and distance <= 15:<br>
+                <span class="tab"></span><span class="tab"></span><span class="tab"></span>print("Level 6")<br>
+                <span class="tab"></span><span class="tab"></span><span class="tab"></span># set current<br>
+                <span class="tab"></span><span class="tab"></span><span class="tab"></span>currentNumber = 6<br>
+                <br>
+                <span class="tab"></span><span class="tab"></span><span class="tab"></span># ensure buzzer is
+                initialized<br>
+                <span class="tab"></span><span class="tab"></span><span class="tab"></span>if previousNumber == 10 or
+                firstPass:<br>
+                <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                    class="tab"></span>passiveBuzzer.init()<br>
+                <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                    class="tab"></span>firstPass = False<br>
+                <br>
+                <span class="tab"></span><span class="tab"></span><span class="tab"></span># ensure light of the
+                previous is off<br>
+                <span class="tab"></span><span class="tab"></span><span class="tab"></span>else:<br>
+                <span class="tab"></span><span class="tab"></span><span class="tab"></span><span class="tab"></span>if
+                currentNumber != previousNumber:<br>
+                <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                    class="tab"></span><span class="tab"></span>lights[previousNumber].value(0)<br>
+                <br>
+                <span class="tab"></span><span class="tab"></span><span class="tab"></span># action<br>
+                <span class="tab"></span><span class="tab"></span><span
+                    class="tab"></span>playNoteAndLight(currentNumber)<br>
+                <br>
+                <span class="tab"></span><span class="tab"></span><span class="tab"></span># set previous<br>
+                <span class="tab"></span><span class="tab"></span><span class="tab"></span>previousNumber =
+                currentNumber <br>
+
+                <span class="tab"></span><span class="tab"></span>elif distance > 15 and distance <= 20:<br>
+                    <span class="tab"></span><span class="tab"></span><span class="tab"></span>print("Level 5")<br>
+                    <span class="tab"></span><span class="tab"></span><span class="tab"></span># set current<br>
+                    <span class="tab"></span><span class="tab"></span><span class="tab"></span>currentNumber = 5<br>
+                    <span class="tab"></span><span class="tab"></span>
+                    <span class="tab"></span><span class="tab"></span><span class="tab"></span># ensure buzzer is
+                    initialized<br>
+                    <span class="tab"></span><span class="tab"></span><span class="tab"></span>if previousNumber == 10
+                    or firstPass:<br>
+                    <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                        class="tab"></span>passiveBuzzer.init()<br>
+                    <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                        class="tab"></span>firstPass = False<br>
+                    <span class="tab"></span><span class="tab"></span>
+                    <span class="tab"></span><span class="tab"></span><span class="tab"></span># ensure light of the
+                    previous is off<br>
+                    <span class="tab"></span><span class="tab"></span><span class="tab"></span>else:<br>
+                    <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                        class="tab"></span>if currentNumber != previousNumber:<br>
+                    <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                        class="tab"></span><span class="tab"></span>lights[previousNumber].value(0)<br>
+                    <span class="tab"></span><span class="tab"></span>
+                    <span class="tab"></span><span class="tab"></span><span class="tab"></span># action<br>
+                    <span class="tab"></span><span class="tab"></span><span
+                        class="tab"></span>playNoteAndLight(currentNumber)<br>
+                    <span class="tab"></span><span class="tab"></span>
+                    <span class="tab"></span><span class="tab"></span><span class="tab"></span># set previous<br>
+                    <span class="tab"></span><span class="tab"></span><span class="tab"></span>previousNumber =
+                    currentNumber<br>
+                    <span class="tab"></span><span class="tab"></span>
+                    <span class="tab"></span><span class="tab"></span>elif distance > 20 and distance <= 25:<br>
+                        <span class="tab"></span><span class="tab"></span><span class="tab"></span>print("Level 4")<br>
+                        <span class="tab"></span><span class="tab"></span><span class="tab"></span># set current<br>
+                        <span class="tab"></span><span class="tab"></span><span class="tab"></span>currentNumber = 4<br>
+                        <span class="tab"></span><span class="tab"></span>
+                        <span class="tab"></span><span class="tab"></span><span class="tab"></span># ensure buzzer is
+                        initialized<br>
+                        <span class="tab"></span><span class="tab"></span><span class="tab"></span>if previousNumber ==
+                        10 or firstPass:<br>
+                        <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                            class="tab"></span>passiveBuzzer.init()<br>
+                        <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                            class="tab"></span>firstPass = False<br>
+                        <span class="tab"></span><span class="tab"></span>
+                        <span class="tab"></span><span class="tab"></span><span class="tab"></span># ensure light of the
+                        previous is off<br>
+                        <span class="tab"></span><span class="tab"></span><span class="tab"></span>else:<br>
+                        <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                            class="tab"></span>if currentNumber != previousNumber:<br>
+                        <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                            class="tab"></span><span class="tab"></span>lights[previousNumber].value(0)<br>
+                        <span class="tab"></span><span class="tab"></span>
+                        <span class="tab"></span><span class="tab"></span><span class="tab"></span># action<br>
+                        <span class="tab"></span><span class="tab"></span><span
+                            class="tab"></span>playNoteAndLight(currentNumber)<br>
+                        <span class="tab"></span><span class="tab"></span>
+                        <span class="tab"></span><span class="tab"></span><span class="tab"></span># set previous<br>
+                        <span class="tab"></span><span class="tab"></span><span class="tab"></span>previousNumber =
+                        currentNumber<br>
+                        <span class="tab"></span><span class="tab"></span>
+                        <span class="tab"></span><span class="tab"></span>elif distance > 25 and distance <= 30:<br>
+                            <span class="tab"></span><span class="tab"></span><span class="tab"></span>print("Level
+                            3")<br>
+                            <span class="tab"></span><span class="tab"></span><span class="tab"></span># set current<br>
+                            <span class="tab"></span><span class="tab"></span><span class="tab"></span>currentNumber =
+                            3<br>
+                            <span class="tab"></span><span class="tab"></span>
+                            <span class="tab"></span><span class="tab"></span><span class="tab"></span># ensure buzzer
+                            is initialized<br>
+                            <span class="tab"></span><span class="tab"></span><span class="tab"></span>if previousNumber
+                            == 10 or firstPass:<br>
+                            <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                                class="tab"></span>passiveBuzzer.init()<br>
+                            <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                                class="tab"></span>firstPass = False<br>
+                            <span class="tab"></span><span class="tab"></span>
+                            <span class="tab"></span><span class="tab"></span><span class="tab"></span># ensure light of
+                            the previous is off<br>
+                            <span class="tab"></span><span class="tab"></span><span class="tab"></span>else:<br>
+                            <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                                class="tab"></span>if currentNumber != previousNumber:<br>
+                            <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                                class="tab"></span><span class="tab"></span>lights[previousNumber].value(0)<br>
+                            <span class="tab"></span><span class="tab"></span>
+                            <span class="tab"></span><span class="tab"></span><span class="tab"></span># action<br>
+                            <span class="tab"></span><span class="tab"></span><span
+                                class="tab"></span>playNoteAndLight(currentNumber)<br>
+                            <span class="tab"></span><span class="tab"></span>
+                            <span class="tab"></span><span class="tab"></span><span class="tab"></span># set
+                            previous<br>
+                            <span class="tab"></span><span class="tab"></span><span class="tab"></span>previousNumber =
+                            currentNumber<br>
+                            <span class="tab"></span><span class="tab"></span>
+                            <span class="tab"></span><span class="tab"></span>elif distance > 30 and distance <= 35:<br>
+                                <span class="tab"></span><span class="tab"></span><span class="tab"></span>print("Level
+                                2")<br>
+                                <span class="tab"></span><span class="tab"></span><span class="tab"></span># set
+                                current<br>
+                                <span class="tab"></span><span class="tab"></span><span class="tab"></span>currentNumber
+                                = 2<br>
+                                <span class="tab"></span><span class="tab"></span>
+                                <span class="tab"></span><span class="tab"></span><span class="tab"></span># ensure
+                                buzzer is initialized<br>
+                                <span class="tab"></span><span class="tab"></span><span class="tab"></span>if
+                                previousNumber == 10 or firstPass:<br>
+                                <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                                    class="tab"></span>passiveBuzzer.init()<br>
+                                <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                                    class="tab"></span>firstPass = False<br>
+                                <span class="tab"></span><span class="tab"></span>
+                                <span class="tab"></span><span class="tab"></span><span class="tab"></span># ensure
+                                light of the previous is off<br>
+                                <span class="tab"></span><span class="tab"></span><span class="tab"></span>else:<br>
+                                <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                                    class="tab"></span>if currentNumber != previousNumber:<br>
+                                <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                                    class="tab"></span><span class="tab"></span>lights[previousNumber].value(0)<br>
+                                <span class="tab"></span><span class="tab"></span>
+                                <span class="tab"></span><span class="tab"></span><span class="tab"></span># action<br>
+                                <span class="tab"></span><span class="tab"></span><span
+                                    class="tab"></span>playNoteAndLight(currentNumber)<br>
+                                <span class="tab"></span><span class="tab"></span>
+                                <span class="tab"></span><span class="tab"></span><span class="tab"></span># set
+                                previous<br>
+                                <span class="tab"></span><span class="tab"></span><span
+                                    class="tab"></span>previousNumber = currentNumber<br>
+                                <span class="tab"></span><span class="tab"></span>
+                                <span class="tab"></span><span class="tab"></span>elif distance > 35 and distance <=
+                                    40:<br>
+                                    <span class="tab"></span><span class="tab"></span><span
+                                        class="tab"></span>print("Level 1")<br>
+                                    <span class="tab"></span><span class="tab"></span><span class="tab"></span># set
+                                    current<br>
+                                    <span class="tab"></span><span class="tab"></span><span
+                                        class="tab"></span>currentNumber = 1<br>
+                                    <span class="tab"></span><span class="tab"></span>
+                                    <span class="tab"></span><span class="tab"></span><span class="tab"></span># ensure
+                                    buzzer is initialized<br>
+                                    <span class="tab"></span><span class="tab"></span><span class="tab"></span>if
+                                    previousNumber == 10 or firstPass:<br>
+                                    <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                                        class="tab"></span>passiveBuzzer.init()<br>
+                                    <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                                        class="tab"></span>firstPass = False<br>
+                                    <span class="tab"></span><span class="tab"></span>
+                                    <span class="tab"></span><span class="tab"></span><span class="tab"></span># ensure
+                                    light of the previous is off<br>
+                                    <span class="tab"></span><span class="tab"></span><span class="tab"></span>else:<br>
+                                    <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                                        class="tab"></span>if currentNumber != previousNumber:<br>
+                                    <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                                        class="tab"></span><span class="tab"></span>lights[previousNumber].value(0)<br>
+                                    <span class="tab"></span><span class="tab"></span>
+                                    <span class="tab"></span><span class="tab"></span><span class="tab"></span>#
+                                    action<br>
+                                    <span class="tab"></span><span class="tab"></span><span
+                                        class="tab"></span>playNoteAndLight(currentNumber)<br>
+                                    <span class="tab"></span><span class="tab"></span>
+                                    <span class="tab"></span><span class="tab"></span><span class="tab"></span># set
+                                    previous<br>
+                                    <span class="tab"></span><span class="tab"></span><span
+                                        class="tab"></span>previousNumber = currentNumber<br>
+                                    <span class="tab"></span><span class="tab"></span>
+                                    <span class="tab"></span><span class="tab"></span>elif distance > 40 and distance <=
+                                        45:<br>
+                                        <span class="tab"></span><span class="tab"></span><span
+                                            class="tab"></span>print("Level 0")<br>
+                                        <span class="tab"></span><span class="tab"></span><span class="tab"></span># set
+                                        current<br>
+                                        <span class="tab"></span><span class="tab"></span><span
+                                            class="tab"></span>currentNumber = 0<br>
+                                        <span class="tab"></span><span class="tab"></span>
+                                        <span class="tab"></span><span class="tab"></span><span class="tab"></span>#
+                                        ensure buzzer is initialized<br>
+                                        <span class="tab"></span><span class="tab"></span><span class="tab"></span>if
+                                        previousNumber == 10 or firstPass:<br>
+                                        <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                                            class="tab"></span>passiveBuzzer.init()<br>
+                                        <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                                            class="tab"></span>firstPass = False<br>
+                                        <span class="tab"></span><span class="tab"></span>
+                                        <span class="tab"></span><span class="tab"></span><span class="tab"></span>#
+                                        ensure light of the previous is off<br>
+                                        <span class="tab"></span><span class="tab"></span><span
+                                            class="tab"></span>else:<br>
+                                        <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                                            class="tab"></span>if currentNumber != previousNumber:<br>
+                                        <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                                            class="tab"></span><span
+                                            class="tab"></span>lights[previousNumber].value(0)<br>
+                                        <span class="tab"></span><span class="tab"></span>
+                                        <span class="tab"></span><span class="tab"></span><span class="tab"></span>#
+                                        action<br>
+                                        <span class="tab"></span><span class="tab"></span><span
+                                            class="tab"></span>playNoteAndLight(currentNumber)<br>
+                                        <span class="tab"></span><span class="tab"></span>
+                                        <span class="tab"></span><span class="tab"></span><span class="tab"></span># set
+                                        previous<br>
+                                        <span class="tab"></span><span class="tab"></span><span
+                                            class="tab"></span>previousNumber = currentNumber<br>
+                                        <span class="tab"></span><span class="tab"></span>
+                                        <span class="tab"></span><span class="tab"></span>else:<br>
+                                        <span class="tab"></span><span class="tab"></span><span
+                                            class="tab"></span>print("Out of range")<br>
+                                        <span class="tab"></span><span class="tab"></span><span
+                                            class="tab"></span>currentNumber = 10<br>
+                                        <span class="tab"></span><span class="tab"></span>
+                                        <span class="tab"></span><span class="tab"></span><span class="tab"></span>if
+                                        previousNumber != 10 and not (firstPass):<br>
+                                        <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                                            class="tab"></span>if previousNumber != 7:<br>
+                                        <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                                            class="tab"></span><span
+                                            class="tab"></span>reverseGPIO(lights[previousNumber])<br>
+                                        <span class="tab"></span><span class="tab"></span><span class="tab"></span><span
+                                            class="tab"></span>passiveBuzzer.deinit()<br>
+                                        <span class="tab"></span><span class="tab"></span>
+                                        <span class="tab"></span><span class="tab"></span><span
+                                            class="tab"></span>previousNumber = currentNumber<br>
+                                        <span class="tab"></span><span class="tab"></span><span
+                                            class="tab"></span>time.sleep_ms(500)<br>
+
+                                        except:<br>
+                                        <span class="tab"></span>passiveBuzzer.deinit()
+
+
+    </p>
+
+    <h2>Project #2</h2>
+
+    <h3>Description of what the lab assignment is about</h3>
+    <p>This lab assignment is about being able to properly use the combination of Thonny, ESP32, and components such
+        that<br>
+        when activated by an infrared remote, a neopixel will light, a buzzer will sound, a servo motor will turn and a
+        LCD will display a message.
+    </p>
+
+    <h3>List of Hardware Compnents</h3>
+
+    <ul>
+        <li>1 x Passive Buzzer</li>
+        <li>1 x NPN Transistor</li>
+        <li>1 x 1k-ohm resistor</li>
+        <li>20 x wires</li>
+        <li>1 x Freenove 8 RGB LED Module</li>
+        <li>1 x Servo</li>
+        <li>1 x LCD1602 Module</li>
+        <li>1 x Active Buzzer</li>
+        <li>3 x 10k-ohm resistor</li>
+        <li>1 x Infrared Remote</li>
+        <li>1 x 10k-ohm resistor</li>
+        <li>ESP 32</li>
+    </ul>
+
+    <h3>Circuit Diagram</h3>
+    <img src="Project_2_CircuitDiagram.jpg" width="708" height="531">
+
+    <h3>Breadboard Diagram</h3>
+    <img src="Project_2_BreadboardView.jpg" width="1400" height="531">
+
+    <h3>Breadboard Settings</h3>
+    <img src="Project_2.jpg" width="1000" height="708">
+
+    <h3>Video</h3>
+    <video controls autoplay>
+        <source src="Project_2.mov" type="video/mp4">
+    </video>
+
+    <h3>Source Code</h3>
+    <p class="code">
+        import time<br>
+        from machine import I2C, Pin, PWM<br>
+        from I2C_LCD import I2cLcd<br>
+        from myservo import myServo<br>
+        import neopixel<br>
+        from irrecvdata import irGetCMD<br>
+        <br>
+        pin = Pin(2, Pin.OUT)<br>
+        np = neopixel.NeoPixel(pin, 8)<br>
+        <br>
+        passiveBuzzer = PWM(Pin(12), 2000)<br>
+        recvPin = irGetCMD(15)<br>
+        <br>
+        passiveBuzzer.deinit()<br>
+        <br>
+        C = 1047<br>
+        D = 1175<br>
+        E = 1319<br>
+        F = 1397<br>
+        G = 1568<br>
+        A = 1760<br>
+        B = 1976<br>
+        C7 = 2093<br>
+        <br>
+        i2c = I2C(scl=Pin(14), sda=Pin(13), freq=400000)<br>
+        servo = myServo(0) # set servo pin<br>
+        servo.myServoWriteAngle(0) # Set Servo Angle<br>
+        time.sleep_ms(1000)<br>
+        <br>
+        # brightness : 0-255<br>
+        brightness = 10<br>
+        colors = [[brightness, 0, 0], # red<br>
+        <span class="tab"></span>[0, brightness, 0], # green<br>
+        <span class="tab"></span>[0, 0, brightness], # blue<br>
+        <span class="tab"></span>[brightness, brightness, brightness], # white<br>
+        <span class="tab"></span>[0, 0, 0]]<br>
+        <br>
+        def displayColors(i):<br>
+        <span class="tab"></span>for j in range(0, 8):<br>
+        <span class="tab"></span><span class="tab"></span>np[j] = colors[i]<br>
+        <span class="tab"></span><span class="tab"></span>np.write()<br>
+        <span class="tab"></span><span class="tab"></span>time.sleep_ms(50)<br>
+        <br>
+        def moveServo():<br>
+        <span class="tab"></span>for i in range(0, 180, 1):<br>
+        <span class="tab"></span><span class="tab"></span>servo.myServoWriteAngle(i)<br>
+        <span class="tab"></span><span class="tab"></span>time.sleep_ms(15)<br>
+        <span class="tab"></span>for i in range(180, 0, -1):<br>
+        <span class="tab"></span><span class="tab"></span>servo.myServoWriteAngle(i)<br>
+        <span class="tab"></span><span class="tab"></span>time.sleep_ms(15)<br>
+        <br>
+        def playMusic(songNotes, songTime):<br>
+        <span class="tab"></span>for i in range(len(songNotes):<br>
+        <span class="tab"></span><span class="tab"></span>passiveBuzzer.freq(songNotes[i])<br>
+        <span class="tab"></span><span class="tab"></span>time.sleep_ms(songTime[i])<br>
+        <span class="tab"></span><span class="tab"></span>passiveBuzzer.freq(10)<br>
+        <span class="tab"></span><span class="tab"></span>time.sleep_ms(50)<br>
+        <br>
+        song1 = [C, D, G, A]<br>
+        time1 = [100, 200, 100, 100]<br>
+        <br>
+        song2 = [G, A, C, D]<br>
+        time2 = [200, 100, 100, 100]<br>
+        <br>
+        song3 = [A, B, C7, F]<br>
+        time3 = [100, 100, 200, 100]<br>
+        <br>
+        devices = i2c.scan()<br>
+        if len(devices) == 0:<br>
+        <span class="tab"></span>print("No i2c device !")<br>
+        else:<br>
+        <span class="tab"></span>for device in devices:<br>
+        <span class="tab"></span><span class="tab"></span>print("I2C addr: " + hex(device))<br>
+        <span class="tab"></span><span class="tab"></span>lcd = I2cLcd(i2c, device, 2, 16)<br>
+        <br>
+        try:<br>
+        <span class="tab"></span>while True:<br>
+        <span class="tab"></span><span class="tab"></span>irValue = recvPin.ir_read()<br>
+        <span class="tab"></span><span class="tab"></span>if irValue:<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span>print(irValue)<br>
+        <span class="tab"></span><span class="tab"></span><br>
+        <span class="tab"></span><span class="tab"></span>if irValue == "0xff30cf":<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span># Print value<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span>lcd.move_to(0, 0)<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span>lcd.putstr("Pressed 1")<br>
+        <span class="tab"></span><span class="tab"></span><br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span># have colors<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span>displayColors(0)<br>
+        <span class="tab"></span><span class="tab"></span><br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span># move servo motor<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span>moveServo()<br>
+        <span class="tab"></span><span class="tab"></span><br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span># ring buzzer<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span>passiveBuzzer.init()<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span>playMusic(song1, time1)<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span>passiveBuzzer.deinit()<br>
+        <span class="tab"></span><span class="tab"></span><br>
+        <span class="tab"></span><span class="tab"></span>elif irValue == "0xff18e7":<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span># Print value<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span>lcd.move_to(0, 0)<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span>lcd.putstr("Pressed 2")<br>
+        <span class="tab"></span><span class="tab"></span><br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span># have colors<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span>displayColors(1)<br>
+        <span class="tab"></span><span class="tab"></span><br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span># move servo motor<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span>moveServo()<br>
+        <span class="tab"></span><span class="tab"></span><br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span># ring buzzer<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span>passiveBuzzer.init()<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span>playMusic(song2, time2)<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span>passiveBuzzer.deinit()<br>
+        <span class="tab"></span><span class="tab"></span><br>
+        <span class="tab"></span><span class="tab"></span>elif irValue == "0xff7a85":<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span># Print value<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span>lcd.move_to(0, 0)<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span>lcd.putstr("Pressed 3")<br>
+        <span class="tab"></span><span class="tab"></span><br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span># have colors<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span>displayColors(2)<br>
+        <span class="tab"></span><span class="tab"></span><br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span># move servo motor<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span>moveServo()<br>
+        <span class="tab"></span><span class="tab"></span><br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span># ring buzzer<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span>passiveBuzzer.init()<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span>playMusic(song3, time3)<br>
+        <span class="tab"></span><span class="tab"></span><span class="tab"></span>passiveBuzzer.deinit()<br>
+        <br>
+        except:<br>
+        <span class="tab"></span>servo.deinit()<br>
+        <span class="tab"></span>passiveBuzzer.deinit()<br>
+    </p>
+
+
+</body>
